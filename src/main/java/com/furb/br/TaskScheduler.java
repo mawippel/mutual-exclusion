@@ -18,7 +18,6 @@ public class TaskScheduler {
 				AppConstants.KILL_COORDINATOR_METHOD);
 		createTask(AppConstants.CREATE_PROCESS_TIMER, AppConstants.CREATE_PROCESS_INTERVAL,
 				AppConstants.CREATE_PROCESS_METHOD);
-
 	}
 
 	/**

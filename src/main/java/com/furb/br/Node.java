@@ -29,7 +29,29 @@ public class Node {
 			// TODO call the coordinator, asking to consume something
 			System.out.println(
 					String.format("[%s] Processo %s solicitou consumir um recurso.", LocalDateTime.now(), this));
-			ses.schedule(getRunnable(), ThreadLocalRandom.current().nextInt(10, 26), TimeUnit.SECONDS);
+
+			// Caso não tenha ninguém consumindo, passa a consumir o recurso.
+			// (Abre uma nova Thread lockando o arquivo por 5-15 seg.)
+			if (!electionManagerInstance.getCoordinator().isUsingResource()) {
+				new Thread(() -> {
+					// lockar o arquivo?
+					System.out.println(
+							String.format("[%s] Processo %s está consumindo o recurso.", LocalDateTime.now(), this));
+					try {
+						Thread.sleep(ThreadLocalRandom.current().nextInt(10000, 26000));
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}).run();
+			} else {
+				// Caso tenha alguem consumindo, joga o Node para a fila.
+				electionManagerInstance.getCoordinator().getQueue().add(this);
+			}
+
+			int nextInt = ThreadLocalRandom.current().nextInt(10, 26);
+			System.out.println(String.format("[%s] Processo %s agendou a próxima execução. Daqui %s segundos.",
+					LocalDateTime.now(), this, nextInt));
+			ses.schedule(getRunnable(), nextInt, TimeUnit.SECONDS);
 		};
 	}
 

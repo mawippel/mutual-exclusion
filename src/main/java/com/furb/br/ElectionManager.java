@@ -14,7 +14,7 @@ public class ElectionManager {
 	@Getter
 	private volatile List<Node> nodes = new CopyOnWriteArrayList<>();
 	@Getter
-	private NodeCoordinator coordinator;
+	private volatile NodeCoordinator coordinator;
 
 	// Private default constructor for a singleton instance
 	private ElectionManager() {
@@ -25,6 +25,7 @@ public class ElectionManager {
 	}
 
 	public void killCoordinator() {
+		if (coordinator == null) return;
 		Node removed = nodes.remove(nodes.indexOf(coordinator.getNode()));
 		System.out.println(String.format("[%s] Processo %s morreu.", LocalDateTime.now(), removed));
 		coordinator = null;
@@ -39,10 +40,6 @@ public class ElectionManager {
 
 		if (addedCordinator)
 			System.out.println(String.format("[%s] Processo %s virou coordenador.", LocalDateTime.now(), node));
-	}
-
-	private void consumeResource() {
-		
 	}
 
 	private boolean addCoordinatorIfFirst(Node node) {

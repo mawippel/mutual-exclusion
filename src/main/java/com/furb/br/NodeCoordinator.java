@@ -10,7 +10,7 @@ public class NodeCoordinator {
 
 	private Queue<Node> queue = new LinkedList<>();
 	private Node node;
-	private boolean usingResource;
+	private volatile boolean usingResource = false;
 
 	public NodeCoordinator(Node node) {
 		this.node = node;

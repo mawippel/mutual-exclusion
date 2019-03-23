@@ -26,30 +26,39 @@ public class Node {
 
 	private Runnable getRunnable() {
 		return () -> {
-			// TODO call the coordinator, asking to consume something
+			if (electionManagerInstance.getCoordinator() == null) {
+				// starts an election process
+				return;
+			}
+
 			System.out.println(
 					String.format("[%s] Processo %s solicitou consumir um recurso.", LocalDateTime.now(), this));
 
-			// Caso não tenha ninguém consumindo, passa a consumir o recurso.
-			// (Abre uma nova Thread lockando o arquivo por 5-15 seg.)
+			// Caso nï¿½o tenha ninguï¿½m consumindo, passa a consumir o recurso.
+			// (Abre uma nova Thread lockando o arquivo por 5-15 seg. e continua executando)
 			if (!electionManagerInstance.getCoordinator().isUsingResource()) {
-				new Thread(() -> {
-					// lockar o arquivo?
+				Thread thread = new Thread(() -> {
+					electionManagerInstance.getCoordinator().setUsingResource(true);
 					System.out.println(
-							String.format("[%s] Processo %s está consumindo o recurso.", LocalDateTime.now(), this));
+							String.format("[%s] Processo %s estï¿½ consumindo o recurso.", LocalDateTime.now(), this));
 					try {
-						Thread.sleep(ThreadLocalRandom.current().nextInt(10000, 26000));
+						// Locks the resource for 5-15 sec.
+						Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 15000));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-				}).run();
+					System.out.println(
+							String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), this));
+				});
+				thread.run();
 			} else {
 				// Caso tenha alguem consumindo, joga o Node para a fila.
 				electionManagerInstance.getCoordinator().getQueue().add(this);
 			}
 
 			int nextInt = ThreadLocalRandom.current().nextInt(10, 26);
-			System.out.println(String.format("[%s] Processo %s agendou a próxima execução. Daqui %s segundos.",
+			System.out.println(String.format(
+					"[%s] Execucao finalizada. Processo %s agendou a prï¿½xima execuï¿½ï¿½o. Daqui %s segundos.",
 					LocalDateTime.now(), this, nextInt));
 			ses.schedule(getRunnable(), nextInt, TimeUnit.SECONDS);
 		};

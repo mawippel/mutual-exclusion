@@ -12,7 +12,7 @@ public class ElectionManager {
 
 	private static ElectionManager INSTANCE;
 	@Getter
-	private volatile List<Node> nodes = new CopyOnWriteArrayList<>();
+	private List<Node> nodes = new CopyOnWriteArrayList<>();
 	@Getter
 	private volatile NodeCoordinator coordinator;
 
@@ -25,11 +25,11 @@ public class ElectionManager {
 	}
 
 	public void killCoordinator() {
-		if (coordinator == null) return;
+		if (coordinator == null)
+			return;
 		Node removed = nodes.remove(nodes.indexOf(coordinator.getNode()));
 		System.out.println(String.format("[%s] Processo %s morreu.", LocalDateTime.now(), removed));
 		coordinator = null;
-		// TODO starts an election process;
 	}
 
 	public void createProcess() {

@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,6 +19,7 @@ public class Node {
 	private final ElectionManager electionManagerInstance = ElectionManager.getInstance();
 	private int id;
 	private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+	private boolean active = true;
 
 	public Node() {
 		this.id = electionManagerInstance.generateNextID();
@@ -28,7 +30,11 @@ public class Node {
 		return () -> {
 			if (electionManagerInstance.getCoordinator() == null) {
 				// starts an election process
-				return;
+				NodeCoordinator newCoordinator = startElection();
+				electionManagerInstance.setCoordinator(newCoordinator);
+				System.out.println(String.format("[%s] Processo de Eleição finalizado. O novo coordenador é %s.",
+						LocalDateTime.now(), newCoordinator));
+				return; // end of the process by now.
 			}
 
 			System.out.println(
@@ -47,6 +53,7 @@ public class Node {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					electionManagerInstance.getCoordinator().setUsingResource(false);
 					System.out.println(
 							String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), this));
 				});
@@ -54,6 +61,7 @@ public class Node {
 			} else {
 				// Caso tenha alguem consumindo, joga o Node para a fila.
 				electionManagerInstance.getCoordinator().getQueue().add(this);
+				System.out.println(String.format("[%s] Node %s foi adicionado a fila.", LocalDateTime.now(), this));
 			}
 
 			int nextInt = ThreadLocalRandom.current().nextInt(10, 26);
@@ -62,6 +70,28 @@ public class Node {
 					LocalDateTime.now(), this, nextInt));
 			ses.schedule(getRunnable(), nextInt, TimeUnit.SECONDS);
 		};
+	}
+
+	private NodeCoordinator startElection() {
+		System.out.println(String.format("[%s] Processo de Eleição iniciado pelo %s.", LocalDateTime.now(), this));
+		electionManagerInstance.setInElection(true);
+		return getCoordinator(new NodeCoordinator(this));
+	}
+
+	public boolean sendMessage() {
+		return active;
+	};
+
+	private NodeCoordinator getCoordinator(NodeCoordinator actualNode) {
+		var aheadNodes = ElectionManagerUtils.getSortedList().stream().filter(n -> n.id > actualNode.getNode().getId())
+				.collect(Collectors.toList());
+		var possibleCoordinators = aheadNodes.stream().map(n -> {
+			return new NodeCoordinator(n);
+		}).collect(Collectors.toList());
+		if (possibleCoordinators.isEmpty()) {
+			return new NodeCoordinator(this);
+		}
+		return getCoordinator(possibleCoordinators.get(0));
 	}
 
 }

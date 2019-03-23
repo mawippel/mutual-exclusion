@@ -7,14 +7,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class ElectionManager {
 
 	private static ElectionManager INSTANCE;
 	@Getter
 	private List<Node> nodes = new CopyOnWriteArrayList<>();
-	@Getter
+	@Getter @Setter
 	private volatile NodeCoordinator coordinator;
+	@Getter @Setter
+	private volatile boolean isInElection;
 
 	// Private default constructor for a singleton instance
 	private ElectionManager() {

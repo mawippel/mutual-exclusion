@@ -25,39 +25,25 @@ public class Node {
 		this.id = electionManagerInstance.generateNextID();
 		ses.schedule(getRunnable(), ThreadLocalRandom.current().nextInt(10, 26), TimeUnit.SECONDS);
 	}
+	
+	public boolean sendMessage() {
+		return active;
+	};
 
 	private Runnable getRunnable() {
 		return () -> {
 			if (electionManagerInstance.getCoordinator() == null) {
-				// starts an election process
-				NodeCoordinator newCoordinator = startElection();
-				electionManagerInstance.setCoordinator(newCoordinator);
-				System.out.println(String.format("[%s] Processo de Eleição finalizado. O novo coordenador é %s.",
-						LocalDateTime.now(), newCoordinator));
+				startsElection();
 				return; // end of the process by now.
 			}
 
 			System.out.println(
 					String.format("[%s] Processo %s solicitou consumir um recurso.", LocalDateTime.now(), this));
 
-			// Caso nï¿½o tenha ninguï¿½m consumindo, passa a consumir o recurso.
+			// Caso não tenha ninguém consumindo, passa a consumir o recurso.
 			// (Abre uma nova Thread lockando o arquivo por 5-15 seg. e continua executando)
 			if (!electionManagerInstance.getCoordinator().isUsingResource()) {
-				Thread thread = new Thread(() -> {
-					electionManagerInstance.getCoordinator().setUsingResource(true);
-					System.out.println(
-							String.format("[%s] Processo %s estï¿½ consumindo o recurso.", LocalDateTime.now(), this));
-					try {
-						// Locks the resource for 5-15 sec.
-						Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 15000));
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					electionManagerInstance.getCoordinator().setUsingResource(false);
-					System.out.println(
-							String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), this));
-				});
-				thread.run();
+				lockResourceInNewThread();
 			} else {
 				// Caso tenha alguem consumindo, joga o Node para a fila.
 				electionManagerInstance.getCoordinator().getQueue().add(this);
@@ -72,15 +58,37 @@ public class Node {
 		};
 	}
 
+	private void lockResourceInNewThread() {
+		Thread thread = new Thread(() -> {
+			electionManagerInstance.getCoordinator().setUsingResource(true);
+			System.out.println(
+					String.format("[%s] Processo %s estï¿½ consumindo o recurso.", LocalDateTime.now(), this));
+			try {
+				// Locks the resource for 5-15 sec.
+				Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 15000));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			electionManagerInstance.getCoordinator().setUsingResource(false);
+			System.out.println(
+					String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), this));
+		});
+		thread.run();
+	}
+
+	private void startsElection() {
+		// starts an election process
+		NodeCoordinator newCoordinator = startElection();
+		electionManagerInstance.setCoordinator(newCoordinator);
+		System.out.println(String.format("[%s] Processo de Eleição finalizado. O novo coordenador é %s.",
+				LocalDateTime.now(), newCoordinator));
+	}
+
 	private NodeCoordinator startElection() {
 		System.out.println(String.format("[%s] Processo de Eleição iniciado pelo %s.", LocalDateTime.now(), this));
 		electionManagerInstance.setInElection(true);
 		return getCoordinator(new NodeCoordinator(this));
 	}
-
-	public boolean sendMessage() {
-		return active;
-	};
 
 	private NodeCoordinator getCoordinator(NodeCoordinator actualNode) {
 		var aheadNodes = ElectionManagerUtils.getSortedList().stream().filter(n -> n.id > actualNode.getNode().getId())

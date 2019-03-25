@@ -72,6 +72,11 @@ public class Node {
 			electionManagerInstance.getCoordinator().setUsingResource(false);
 			System.out.println(
 					String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), this));
+
+			Node next = electionManagerInstance.getCoordinator().getQueue().poll();
+			if(next != null) {
+				next.lockResourceInNewThread();
+			}
 		});
 		thread.run();
 	}

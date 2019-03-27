@@ -32,12 +32,28 @@ public class Node {
 
 	private Runnable getRunnable() {
 		return () -> {
-			// TODO Can only execute if the Node is active
+			
+			System.out.println("Está passando aqui pro node " + this);
+			/*
+			 * If the actual node is the coordinator or,
+			 * the actual node doesn't exist in the list, stop scheduling this Thread.
+			 */
+			if (this.equals(electionManagerInstance.getCoordinator().getNode())
+					|| electionManagerInstance.getNodes().indexOf(this) == -1) {
+				System.out.println("acabou:" + electionManagerInstance.getNodes().indexOf(this));
+				System.out.println("acabou:" + this.equals(electionManagerInstance.getCoordinator().getNode()));
+				ses.shutdown();
+				return;
+			}
+			
+			System.out.println("Está passando aqui 2 pro node " + this);
 			
 			if (electionManagerInstance.getCoordinator() == null) {
 				startsElection();
 				return; // end of the process by now.
 			}
+			
+			System.out.println("Está passando aqui 3 pro node " + this);
 
 			System.out.println(
 					String.format("[%s] Processo %s solicitou consumir um recurso.", LocalDateTime.now(), this));

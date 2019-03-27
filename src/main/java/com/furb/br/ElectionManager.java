@@ -20,6 +20,10 @@ public class ElectionManager {
 	@Getter
 	@Setter
 	private volatile boolean isInElection;
+	@Getter
+	@Setter
+	private volatile boolean usingResource = false;
+	
 
 	// Private default constructor for a singleton instance
 	private ElectionManager() {

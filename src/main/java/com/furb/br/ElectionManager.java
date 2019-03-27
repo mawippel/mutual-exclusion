@@ -13,10 +13,12 @@ public class ElectionManager {
 
 	private static ElectionManager INSTANCE;
 	@Getter
-	private List<Node> nodes = new CopyOnWriteArrayList<>();
-	@Getter @Setter
+	private volatile List<Node> nodes = new CopyOnWriteArrayList<>();
+	@Getter
+	@Setter
 	private volatile NodeCoordinator coordinator;
-	@Getter @Setter
+	@Getter
+	@Setter
 	private volatile boolean isInElection;
 
 	// Private default constructor for a singleton instance
@@ -30,9 +32,14 @@ public class ElectionManager {
 	public void killCoordinator() {
 		if (coordinator == null)
 			return;
-		Node removed = nodes.remove(nodes.indexOf(coordinator.getNode()));
-		System.out.println(String.format("[%s] Processo %s morreu.", LocalDateTime.now(), removed));
+		Node node = nodes.get(nodes.indexOf(coordinator.getNode()));
+		nodes.remove(node);
+		System.out.println(String.format("[%s] Coordenador %s morreu.", LocalDateTime.now(), node));
+		
+		// Sets the instances to null, to save memory.
+		node = null;
 		coordinator = null;
+		System.gc();
 	}
 
 	public void createProcess() {

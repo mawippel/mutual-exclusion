@@ -32,6 +32,8 @@ public class Node {
 
 	private Runnable getRunnable() {
 		return () -> {
+			// TODO Can only execute if the Node is active
+			
 			if (electionManagerInstance.getCoordinator() == null) {
 				startsElection();
 				return; // end of the process by now.
@@ -40,19 +42,21 @@ public class Node {
 			System.out.println(
 					String.format("[%s] Processo %s solicitou consumir um recurso.", LocalDateTime.now(), this));
 
-			// Caso não tenha ninguém consumindo, passa a consumir o recurso.
-			// (Abre uma nova Thread lockando o arquivo por 5-15 seg. e continua executando)
+			/*
+			 * If there's no process consuming, starts to consume the resource. 
+			 * (Open a new Thread locking the resource for 5-15 sec.)
+			 */
 			if (!electionManagerInstance.getCoordinator().isUsingResource()) {
 				lockResourceInNewThread();
 			} else {
-				// Caso tenha alguem consumindo, joga o Node para a fila.
+				// If there's some process consuming, add it to the Queue
 				electionManagerInstance.getCoordinator().getQueue().add(this);
 				System.out.println(String.format("[%s] Node %s foi adicionado a fila.", LocalDateTime.now(), this));
 			}
 
 			int nextInt = ThreadLocalRandom.current().nextInt(10, 26);
 			System.out.println(String.format(
-					"[%s] Execucao finalizada. Processo %s agendou a prï¿½xima execuï¿½ï¿½o. Daqui %s segundos.",
+					"[%s] Execucao finalizada. Processo %s agendou a proxima execucao. Daqui %s segundos.",
 					LocalDateTime.now(), this, nextInt));
 			ses.schedule(getRunnable(), nextInt, TimeUnit.SECONDS);
 		};
@@ -62,7 +66,7 @@ public class Node {
 		Thread thread = new Thread(() -> {
 			electionManagerInstance.getCoordinator().setUsingResource(true);
 			System.out.println(
-					String.format("[%s] Processo %s estï¿½ consumindo o recurso.", LocalDateTime.now(), this));
+					String.format("[%s] Processo %s esta consumindo o recurso.", LocalDateTime.now(), this));
 			try {
 				// Locks the resource for 5-15 sec.
 				Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 15000));
@@ -82,7 +86,7 @@ public class Node {
 	}
 
 	private void startsElection() {
-		// starts an election process
+		// Starts an election process
 		NodeCoordinator newCoordinator = startElection();
 		electionManagerInstance.setCoordinator(newCoordinator);
 		System.out.println(String.format("[%s] Processo de Eleição finalizado. O novo coordenador é %s.",

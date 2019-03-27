@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 public interface AppConstants {
 
-	public static final long KILL_COORDINATOR_INTERVAL = TimeUnit.MINUTES.toMillis(5); // TODO: change
+	public static final long KILL_COORDINATOR_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 	public static final String KILL_COORDINATOR_TIMER = "KILL_COORDINATOR_TIMER";
 	public static final String KILL_COORDINATOR_METHOD = "killCoordinator";
 	

@@ -85,7 +85,7 @@ public class ElectionManager {
 	
 	public void stopUsingResource(Node n) {
 		this.usingResource = false;
-		System.out.println(String.format("[%s] Processo %s esta consumindo o recurso.", LocalDateTime.now(), n));
+		System.out.println(String.format("[%s] Processo %s parou de consumir o recurso.", LocalDateTime.now(), n));
 	}
 	
 }

@@ -55,7 +55,6 @@ public class Node {
 				}
 
 				consumeResource();
-
 				scheduleNextExecution();
 			} catch (Exception e) {
 				System.out.println(e);
@@ -103,15 +102,14 @@ public class Node {
 	 */
 	private void lockResourceInNewThread() {
 		new Thread(() -> {
+			electionManagerInstance.startUsingResource(this);
 			try {
-				electionManagerInstance.startUsingResource(this);
-				Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 15000));
-				electionManagerInstance.stopUsingResource(this);
+				Thread.sleep(ThreadLocalRandom.current().nextInt(AppConstants.LOCK_RESOURCE_INIT,
+						AppConstants.LOCK_RESOURCE_LIMIT));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			} finally {
-				electionManagerInstance.stopUsingResource(this);
 			}
+			electionManagerInstance.stopUsingResource(this);
 
 			NodeCoordinator coordinator = electionManagerInstance.getCoordinator();
 			if (coordinator != null) {
@@ -124,8 +122,8 @@ public class Node {
 	}
 
 	private void scheduleNextExecution() {
-		var nextInt = ThreadLocalRandom.current().nextInt(AppConstants.LOCK_RESOURCE_INIT,
-				AppConstants.LOCK_RESOURCE_LIMIT);
+		var nextInt = ThreadLocalRandom.current().nextInt(AppConstants.CREATE_NODE_INIT,
+				AppConstants.CREATE_NODE_LIMIT);
 		System.out.println(
 				String.format("[%s] Execucao finalizada. Processo %s agendou a proxima execucao. Daqui %s segundos.",
 						LocalDateTime.now(), this, nextInt));

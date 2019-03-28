@@ -20,8 +20,6 @@ public class ElectionManager {
 	@Getter
 	@Setter
 	private volatile boolean isInElection;
-	@Getter
-	@Setter
 	private volatile boolean usingResource = false;
 	
 
@@ -41,7 +39,6 @@ public class ElectionManager {
 		System.out.println(String.format("[%s] Coordenador %s morreu.", LocalDateTime.now(), node));
 		
 		// Sets the instances to null, to save memory.
-		node = null;
 		coordinator = null;
 		System.gc();
 	}
@@ -77,4 +74,18 @@ public class ElectionManager {
 		return newID;
 	}
 
+	public boolean isUsingResource() {
+		return usingResource;
+	}
+
+	public void startUsingResource(Node n) {
+		this.usingResource = true;
+		System.out.println(String.format("[%s] Processo %s esta consumindo o recurso.", LocalDateTime.now(), n));
+	}
+	
+	public void stopUsingResource(Node n) {
+		this.usingResource = false;
+		System.out.println(String.format("[%s] Processo %s esta consumindo o recurso.", LocalDateTime.now(), n));
+	}
+	
 }
